@@ -7,9 +7,11 @@ cmake -S llvm -B build
 cmake --build build --config Release --parallel $cores --target `
   FileCheck `
   not `
+  count `
 
 Move-Item build\Release\bin\FileCheck.exe "C:\Program Files\LLVM\bin"
 Move-Item build\Release\bin\not.exe "C:\Program Files\LLVM\bin"
+Move-Item build\Release\bin\count.exe "C:\Program Files\LLVM\bin"
 Set-Location ..
 Remove-Item -Recurse -Force llvm-project
 
