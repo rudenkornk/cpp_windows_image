@@ -4,8 +4,12 @@ if ($cores -lt 1) { $cores = 1 }
 git clone --config core.autocrlf=false --branch release/14.x https://github.com/llvm/llvm-project.git
 Set-Location llvm-project
 cmake -S llvm -B build
-cmake --build build --config Release --parallel $cores --target FileCheck
+cmake --build build --config Release --parallel $cores --target `
+  FileCheck `
+  not `
+
 Move-Item build\Release\bin\FileCheck.exe "C:\Program Files\LLVM\bin"
+Move-Item build\Release\bin\not.exe "C:\Program Files\LLVM\bin"
 Set-Location ..
 Remove-Item -Recurse -Force llvm-project
 
