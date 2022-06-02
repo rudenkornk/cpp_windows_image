@@ -85,7 +85,7 @@ endif
 		#> --name $(DOCKER_CONTAINER_NAME) <#\
 		#> --mount type=bind,source="$(CI_BIND_MOUNT)",target=C:\repo <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
-		#> --memory 2G <#\
+		#> --memory 8G <#\
 		#> $(DOCKER_IMAGE_TAG)
 	Start-Sleep -Seconds 1
 	New-Item -Force -Name "$@" -ItemType File
@@ -105,7 +105,7 @@ endif
 		#> --name $(DOCKER_TEST_CONTAINER_NAME) <#\
 		#> --mount type=bind,source="$$(Get-Location)",target=C:\repo <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
-		#> --memory 2G <#\
+		#> --memory 8G <#\
 		#> $(DOCKER_IMAGE_TAG)
 	Start-Sleep -Seconds 1
 	New-Item -Force -Name "$@" -ItemType File
