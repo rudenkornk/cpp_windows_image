@@ -59,7 +59,7 @@ jobs:
     - name: "Login to image registry"
       uses: docker/login-action@v1
       with:
-        registry: ${{ env.registry }}
+        #registry: ${{ env.registry }} # uncomment for any registry except docker.io
         username: ${{ github.actor }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOCKEN }}
     - name: Download cache
