@@ -9,6 +9,7 @@ cmake --build build --config Release --parallel $cores --target `
   not `
   count `
 
+Copy-Item clang\tools\clang-format\clang-format-diff.py "C:\Program Files\LLVM\bin"
 Move-Item build\Release\bin\FileCheck.exe "C:\Program Files\LLVM\bin"
 Move-Item build\Release\bin\not.exe "C:\Program Files\LLVM\bin"
 Move-Item build\Release\bin\count.exe "C:\Program Files\LLVM\bin"
