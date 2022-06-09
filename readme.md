@@ -46,3 +46,18 @@ docker run --interactive --tty `
 Instead of `$(Get-Location)` use path to your C++ repo.
 It is recommended to mount it into `/home/repo`.
 
+### 2. Use scripts from this repository to setup your own system:
+Actually, it is recommended to look into these scripts first, and probably install prerequisites manually, rather than run scripts.
+
+```pwsh
+# Ask system administrator to install necessary packages
+.\install_pwsh.ps1
+.\install_vsbt.bat
+.\install_boost.ps1
+.\install_chocolatey.ps1
+.\install_llvm.ps1
+.\install_cmake.ps1
+.\install_python.ps1
+.\install_llvm_tools.ps1
+.\config_system.ps1
+```
