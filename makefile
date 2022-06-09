@@ -83,6 +83,7 @@ ifneq ($(DOCKER_CONTAINER_ID),)
 endif
 	docker run --interactive --tty --detach <#\
 		#> --name $(DOCKER_CONTAINER_NAME) <#\
+		#> --user ContainerUser <#\
 		#> --mount type=bind,source="$(CI_BIND_MOUNT)",target=C:\repo <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
 		#> --memory 8G <#\
@@ -103,6 +104,7 @@ ifneq ($(DOCKER_TEST_CONTAINER_ID),)
 endif
 	docker run --interactive --tty --detach <#\
 		#> --name $(DOCKER_TEST_CONTAINER_NAME) <#\
+		#> --user ContainerUser <#\
 		#> --mount type=bind,source="$$(Get-Location)",target=C:\repo <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
 		#> --memory 8G <#\
