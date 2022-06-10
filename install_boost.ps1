@@ -17,6 +17,6 @@ $new_include = "$current_include;C:\Program Files\boost\boost_1_79_0\"
 [Environment]::SetEnvironmentVariable("INCLUDE", $new_include, "Machine")
 
 $current_lib = [Environment]::GetEnvironmentVariable("LIB", "Machine");
-$new_lib = "$current_lib;C:\Program Files\boost\boost_1_79_0\stage\lib"
+$new_lib = "$current_lib;C:\Program Files\boost\boost_1_79_0\lib"
 [Environment]::SetEnvironmentVariable("LIB", $new_lib, "Machine")
 
