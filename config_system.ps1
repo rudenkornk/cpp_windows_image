@@ -1,4 +1,5 @@
 choco install make
+choco install ninja
 choco install nsis
 choco install vim
 
