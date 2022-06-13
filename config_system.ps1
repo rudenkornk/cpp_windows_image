@@ -1,5 +1,5 @@
-choco install vim
 choco install make
+choco install vim
 
 # Support bash -C
 $current_path = [Environment]::GetEnvironmentVariable("PATH", "Machine");
