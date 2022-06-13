@@ -33,6 +33,7 @@ RUN ./config_system.ps1
 
 COPY Profile.ps1 C:\\Users\\ContainerAdministrator\\Documents\\PowerShell\\Profile.ps1
 COPY Profile.ps1 C:\\Users\\ContainerUser\\Documents\\PowerShell\\Profile.ps1
+COPY vs_exec.bat C:\\vs_exec.bat
 
 WORKDIR C:\\repo
 
