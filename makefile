@@ -22,7 +22,6 @@ DOCKER_DEPS += Dockerfile
 DOCKER_DEPS += Profile.ps1
 DOCKER_DEPS += install_pwsh.ps1
 DOCKER_DEPS += install_vsbt.bat
-DOCKER_DEPS += install_boost.ps1
 DOCKER_DEPS += install_chocolatey.ps1
 DOCKER_DEPS += install_llvm.ps1
 DOCKER_DEPS += install_cmake.ps1
@@ -89,10 +88,27 @@ endif
 
 $(BUILD_DIR)/msvc/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
+		#> pwsh -Command " <#\
+		#> conan install <#\
+		#> --profile:host msvc.jinja <#\
+		#> --profile:build msvc.jinja <#\
+		#> --settings build_type=Release <#\
+		#> --build missing <#\
+		#> --install-folder $(BUILD_DIR)/msvc $(TESTS_DIR) <#\
+		#> "
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "<#\
-		#>   cmake -B $(BUILD_DIR)\msvc -S $(TESTS_DIR) && <#\
-		#>   cmake --build $(BUILD_DIR)\msvc --config Debug && <#\
-		#>   .\$(BUILD_DIR)\msvc\Debug\hello_world.exe <#\
+		#> conan build --configure <#\
+		#> --build-folder $(BUILD_DIR)/msvc $(TESTS_DIR) <#\
+		#>"
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
+		#> pwsh -Command "<#\
+		#> conan build --build <#\
+		#> --build-folder $(BUILD_DIR)/msvc $(TESTS_DIR) <#\
+		#>"
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
+		#> pwsh -Command " <#\
+		#> .\$(BUILD_DIR)\msvc\Release\hello_world.exe <#\
 		#> " | Select-String "Hello world!" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "hello_world failed!"}
 	New-Item -Force -Name "$@" -ItemType File
@@ -105,10 +121,27 @@ $(BUILD_DIR)/llvm/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
 		#> pwsh -Command "clang++ --version" | Select-String "14\.\d+\.\d+" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "LLVM version check failed!"}
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
-		#> pwsh -Command "<#\
-		#>   cmake -B $(BUILD_DIR)\llvm -S $(TESTS_DIR) -T ClangCL && <#\
-		#>   cmake --build $(BUILD_DIR)\llvm --config Debug && <#\
-		#>   .\$(BUILD_DIR)\llvm\Debug\hello_world.exe <#\
+		#> pwsh -Command " <#\
+		#> conan install <#\
+		#> --profile:host llvm.jinja <#\
+		#> --profile:build llvm.jinja <#\
+		#> --settings build_type=Release <#\
+		#> --build missing <#\
+		#> --install-folder $(BUILD_DIR)/llvm $(TESTS_DIR) <#\
+		#> "
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
+		#> pwsh -Command " <#\
+		#> conan build --configure <#\
+		#> --build-folder $(BUILD_DIR)/llvm $(TESTS_DIR) <#\
+		#> "
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
+		#> pwsh -Command " <#\
+		#> conan build --build <#\
+		#> --build-folder $(BUILD_DIR)/llvm $(TESTS_DIR) <#\
+		#> "
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
+		#> pwsh -Command " <#\
+		#> .\$(BUILD_DIR)\llvm\Release\hello_world.exe <#\
 		#> " | Select-String "Hello world!" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "hello_world failed!"}
 	New-Item -Force -Name "$@" -ItemType File

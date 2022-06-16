@@ -1,0 +1,20 @@
+include(default)
+
+{% set flags = "" %}
+
+[settings]
+compiler=Visual Studio
+compiler.version=17
+
+{% if os.getenv("ASAN") == "ON" -%}
+  {% set flags = flags + "/fsanitize=address " %}
+  compiler.address_sanitizer=True
+{%- endif %}
+
+[options]
+[build_requires]
+[env]
+{% if flags -%}
+  CFLAGS={{ flags }}
+  CXXFLAGS={{ flags }}
+{%- endif %}
