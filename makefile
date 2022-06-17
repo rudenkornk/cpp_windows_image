@@ -12,6 +12,7 @@ DOCKER_IMAGE_TAG := $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_VERSION)
 DOCKER_IMAGE := $(BUILD_DIR)/$(PROJECT_NAME)_image_$(DOCKER_IMAGE_VERSION)
 DOCKER_CACHE_FROM ?=
 DOCKER_ISOLATION ?= hyperv # process or hyperv
+DOCKER_USER ?= ContainerUser # ContainerUser or ContainerAdministrator
 DOCKER_CONTAINER_NAME := $(PROJECT_NAME)_container
 DOCKER_CONTAINER := $(BUILD_DIR)/$(DOCKER_CONTAINER_NAME)_$(DOCKER_IMAGE_VERSION)
 
@@ -77,7 +78,7 @@ ifneq ($(DOCKER_CONTAINER_ID),)
 endif
 	docker run --interactive --tty --detach <#\
 		#> --name $(DOCKER_CONTAINER_NAME) <#\
-		#> --user ContainerUser <#\
+		#> --user $(DOCKER_USER) <#\
 		#> --mount type=bind,source="$$(Get-Location)",target=C:\repo <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
 		#> --memory 8G <#\
