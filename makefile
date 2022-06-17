@@ -13,6 +13,7 @@ DOCKER_IMAGE := $(BUILD_DIR)/$(PROJECT_NAME)_image_$(DOCKER_IMAGE_VERSION)
 DOCKER_CACHE_FROM ?=
 DOCKER_ISOLATION ?= hyperv # process or hyperv
 DOCKER_USER ?= ContainerUser # ContainerUser or ContainerAdministrator
+DOCKER_MEMORY := 8G
 DOCKER_CONTAINER_NAME := $(PROJECT_NAME)_container
 DOCKER_CONTAINER := $(BUILD_DIR)/$(DOCKER_CONTAINER_NAME)_$(DOCKER_IMAGE_VERSION)
 
@@ -61,7 +62,7 @@ $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 		#> --build-arg VCS_REF="$(VCS_REF)" <#\
 		#> --build-arg BUILD_DATE="$(BUILD_DATE)" <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
-		#> --memory 2G <#\
+		#> --memory $(DOCKER_MEMORY) <#\
 		#> --tag $(DOCKER_IMAGE_TAG) .
 	New-Item -Force -Name "$@" -ItemType File
 
@@ -81,7 +82,7 @@ endif
 		#> --user $(DOCKER_USER) <#\
 		#> --mount type=bind,source="$$(Get-Location)",target=C:\repo <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
-		#> --memory 8G <#\
+		#> --memory $(DOCKER_MEMORY) <#\
 		#> $(DOCKER_IMAGE_TAG)
 	Start-Sleep -Seconds 1
 	New-Item -Force -Name "$@" -ItemType File
