@@ -6,17 +6,14 @@ VCS_REF := $(shell git rev-parse HEAD)
 BUILD_DATE := $(shell Get-Date -Format "yyyy-MM-dd")
 BUILD_DIR ?= build
 TESTS_DIR := tests
-CI_BIND_MOUNT ?= $(shell (Get-Location).ToString())
 DOCKER_IMAGE_VERSION ?= 0.2.0
 DOCKER_IMAGE_NAME := rudenkornk/$(PROJECT_NAME)
 DOCKER_IMAGE_TAG := $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_VERSION)
 DOCKER_IMAGE := $(BUILD_DIR)/$(PROJECT_NAME)_image_$(DOCKER_IMAGE_VERSION)
 DOCKER_CACHE_FROM ?=
 DOCKER_ISOLATION ?= hyperv # process or hyperv
-DOCKER_CONTAINER_NAME ?= $(PROJECT_NAME)_container
+DOCKER_CONTAINER_NAME := $(PROJECT_NAME)_container
 DOCKER_CONTAINER := $(BUILD_DIR)/$(DOCKER_CONTAINER_NAME)_$(DOCKER_IMAGE_VERSION)
-DOCKER_TEST_CONTAINER_NAME := $(PROJECT_NAME)_test_container
-DOCKER_TEST_CONTAINER := $(BUILD_DIR)/$(DOCKER_TEST_CONTAINER_NAME)_$(DOCKER_IMAGE_VERSION)
 
 DOCKER_DEPS :=
 DOCKER_DEPS += Dockerfile
@@ -81,27 +78,6 @@ endif
 	docker run --interactive --tty --detach <#\
 		#> --name $(DOCKER_CONTAINER_NAME) <#\
 		#> --user ContainerUser <#\
-		#> --mount type=bind,source="$(CI_BIND_MOUNT)",target=C:\repo <#\
-		#> --isolation=$(DOCKER_ISOLATION) <#\
-		#> --memory 8G <#\
-		#> $(DOCKER_IMAGE_TAG)
-	Start-Sleep -Seconds 1
-	New-Item -Force -Name "$@" -ItemType File
-
-.PHONY: $(DOCKER_TEST_CONTAINER_NAME)
-$(DOCKER_TEST_CONTAINER_NAME): $(DOCKER_TEST_CONTAINER)
-
-DOCKER_TEST_CONTAINER_ID := $(shell if($$$(DOCKERD_UP)){return (docker container ls --quiet --all --filter name="^/$(DOCKER_TEST_CONTAINER_NAME)$$")})
-DOCKER_TEST_CONTAINER_STATE := $(shell if($$$(DOCKERD_UP)){return (docker container ls --format "{{.State}}" --all --filter name="^/$(DOCKER_TEST_CONTAINER_NAME)$$")})
-DOCKER_TEST_CONTAINER_RUN_STATUS := $(shell if("$(DOCKER_TEST_CONTAINER_STATE)" -ne "running"){return "$(DOCKER_TEST_CONTAINER)_not_running"})
-.PHONY: $(DOCKER_TEST_CONTAINER)_not_running
-$(DOCKER_TEST_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_TEST_CONTAINER_RUN_STATUS)
-ifneq ($(DOCKER_TEST_CONTAINER_ID),)
-	docker container rename $(DOCKER_TEST_CONTAINER_NAME) $(DOCKER_TEST_CONTAINER_NAME)_$(DOCKER_TEST_CONTAINER_ID)
-endif
-	docker run --interactive --tty --detach <#\
-		#> --name $(DOCKER_TEST_CONTAINER_NAME) <#\
-		#> --user ContainerUser <#\
 		#> --mount type=bind,source="$$(Get-Location)",target=C:\repo <#\
 		#> --isolation=$(DOCKER_ISOLATION) <#\
 		#> --memory 8G <#\
@@ -109,8 +85,8 @@ endif
 	Start-Sleep -Seconds 1
 	New-Item -Force -Name "$@" -ItemType File
 
-$(BUILD_DIR)/msvc/hello_world: $(DOCKER_TEST_CONTAINER) $(HELLO_WORLD_DEPS)
-	docker exec $(DOCKER_TEST_CONTAINER_NAME) <#\
+$(BUILD_DIR)/msvc/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "<#\
 		#>   cmake -B $(BUILD_DIR)\msvc -S $(TESTS_DIR) && <#\
 		#>   cmake --build $(BUILD_DIR)\msvc --config Debug && <#\
@@ -119,14 +95,14 @@ $(BUILD_DIR)/msvc/hello_world: $(DOCKER_TEST_CONTAINER) $(HELLO_WORLD_DEPS)
 		#> if(!$$ret){throw "hello_world failed!"}
 	New-Item -Force -Name "$@" -ItemType File
 
-$(BUILD_DIR)/llvm/hello_world: $(DOCKER_TEST_CONTAINER) $(HELLO_WORLD_DEPS)
-	docker exec $(DOCKER_TEST_CONTAINER_NAME) <#\
+$(BUILD_DIR)/llvm/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "clang --version" | Select-String "14\.\d+\.\d+" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "LLVM version check failed!"}
-	docker exec $(DOCKER_TEST_CONTAINER_NAME) <#\
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "clang++ --version" | Select-String "14\.\d+\.\d+" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "LLVM version check failed!"}
-	docker exec $(DOCKER_TEST_CONTAINER_NAME) <#\
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "<#\
 		#>   cmake -B $(BUILD_DIR)\llvm -S $(TESTS_DIR) -T ClangCL && <#\
 		#>   cmake --build $(BUILD_DIR)\llvm --config Debug && <#\
@@ -135,20 +111,20 @@ $(BUILD_DIR)/llvm/hello_world: $(DOCKER_TEST_CONTAINER) $(HELLO_WORLD_DEPS)
 		#> if(!$$ret){throw "hello_world failed!"}
 	New-Item -Force -Name "$@" -ItemType File
 
-$(BUILD_DIR)/clang_format_test: $(DOCKER_TEST_CONTAINER)
-	docker exec $(DOCKER_TEST_CONTAINER_NAME) <#\
+$(BUILD_DIR)/clang_format_test: $(DOCKER_CONTAINER)
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "clang-format --version" | Select-String "14\.\d+\.\d+" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "clang-format version check failed!"}
 	New-Item -Force -Name "$@" -ItemType File
 
-$(BUILD_DIR)/lit_test: $(DOCKER_TEST_CONTAINER)
-	docker exec $(DOCKER_TEST_CONTAINER_NAME) <#\
+$(BUILD_DIR)/lit_test: $(DOCKER_CONTAINER)
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "lit --version" | Select-String "14\.\d+\.\d+" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "llvm-lit version check failed!"}
 	New-Item -Force -Name "$@" -ItemType File
 
-$(BUILD_DIR)/filecheck_test: $(DOCKER_TEST_CONTAINER)
-	docker exec $(DOCKER_TEST_CONTAINER_NAME) <#\
+$(BUILD_DIR)/filecheck_test: $(DOCKER_CONTAINER)
+	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "FileCheck --version" | Select-String "14\.\d+\.\d+" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "llvm-lit version check failed!"}
 	New-Item -Force -Name "$@" -ItemType File
@@ -164,6 +140,6 @@ check: \
 
 .PHONY: clean
 clean:
-	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME)_ | %{ docker stop $$_ }
-	docker container ls --quiet --filter name=$(DOCKER_TEST_CONTAINER_NAME)_ --all | %{ docker rm $$_ }
+	docker container ls --quiet --filter name=$(DOCKER_CONTAINER_NAME)_ | %{ docker stop $$_ }
+	docker container ls --quiet --filter name=$(DOCKER_CONTAINER_NAME)_ --all | %{ docker rm $$_ }
 
