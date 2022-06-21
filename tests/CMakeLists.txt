@@ -4,6 +4,8 @@ project(hello_world)
 
 add_executable(hello_world)
 
+message("TOOLCHAIN \"${CMAKE_TOOLCHAIN_FILE}\"")
+
 find_package(Boost REQUIRED COMPONENTS headers)
 
 target_link_libraries(hello_world PRIVATE Boost::headers)

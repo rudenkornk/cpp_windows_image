@@ -3,14 +3,23 @@ include(default)
 {% set flags = [] %}
 
 [settings]
-compiler=msvc
-compiler.version=193
-compiler.cppstd=20
-compiler.runtime=dynamic
+compiler=Visual Studio
+compiler.version=17
+compiler.toolset=ClangCL
 
 {% if os.getenv("ASAN") == "ON" -%}
-  {% set flags = flags + ["/fsanitize=address", "/INCREMENTAL:NO", "/Zi"] %}
+  {% set flags = flags + ["-fsanitize=address"] %}
   compiler.address_sanitizer=True
+{%- endif %}
+
+{% if os.getenv("UBSAN") == "ON" -%}
+  {% set flags = flags + ["-fsanitize=undefined"] %}
+  compiler.ub_sanitizer=True
+{%- endif %}
+
+{% if os.getenv("TSAN") == "ON" -%}
+  {% set flags = flags + ["-fsanitize=thread"] %}
+  compiler.thread_sanitizer=True
 {%- endif %}
 
 [options]

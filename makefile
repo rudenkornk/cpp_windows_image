@@ -6,7 +6,7 @@ VCS_REF := $(shell git rev-parse HEAD)
 BUILD_DATE := $(shell Get-Date -Format "yyyy-MM-dd")
 BUILD_DIR ?= build
 TESTS_DIR := tests
-DOCKER_IMAGE_VERSION ?= 0.2.0
+DOCKER_IMAGE_VERSION ?= 0.2.1
 DOCKER_IMAGE_NAME := rudenkornk/$(PROJECT_NAME)
 DOCKER_IMAGE_TAG := $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_VERSION)
 DOCKER_IMAGE := $(BUILD_DIR)/$(PROJECT_NAME)_image_$(DOCKER_IMAGE_VERSION)
@@ -19,7 +19,6 @@ DOCKER_CONTAINER := $(BUILD_DIR)/$(DOCKER_CONTAINER_NAME)_$(DOCKER_IMAGE_VERSION
 
 DOCKER_DEPS :=
 DOCKER_DEPS += Dockerfile
-DOCKER_DEPS += Profile.ps1
 DOCKER_DEPS += install_pwsh.ps1
 DOCKER_DEPS += install_vsbt.bat
 DOCKER_DEPS += install_chocolatey.ps1
@@ -27,11 +26,13 @@ DOCKER_DEPS += install_llvm.ps1
 DOCKER_DEPS += install_cmake.ps1
 DOCKER_DEPS += install_python.ps1
 DOCKER_DEPS += install_llvm_tools.ps1
+DOCKER_DEPS += install_conan.ps1
+DOCKER_DEPS += $(shell Get-ChildItem -Recurse -File -Name conan | %{"conan\" + $$_} )
+DOCKER_DEPS += config_conan.ps1
 DOCKER_DEPS += config_system.ps1
+DOCKER_DEPS += Profile.ps1
 
-HELLO_WORLD_DEPS :=
-HELLO_WORLD_DEPS += $(TESTS_DIR)/hello_world.cpp
-HELLO_WORLD_DEPS += $(TESTS_DIR)/CMakeLists.txt
+HELLO_WORLD_DEPS += $(shell Get-ChildItem -Recurse -File -Name $(TESTS_DIR) | %{"$(TESTS_DIR)\" + $$_} )
 
 .PHONY: $(DOCKER_IMAGE_NAME)
 $(DOCKER_IMAGE_NAME): $(DOCKER_IMAGE)
@@ -83,32 +84,37 @@ endif
 		#> --isolation=$(DOCKER_ISOLATION) <#\
 		#> --memory $(DOCKER_MEMORY) <#\
 		#> $(DOCKER_IMAGE_TAG)
-	Start-Sleep -Seconds 1
 	New-Item -Force -Name "$@" -ItemType File
 
 $(BUILD_DIR)/msvc/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command " <#\
+		#> `$$env:ASAN=\`"OFF\`"; <#\
 		#> conan install <#\
-		#> --profile:host msvc.jinja <#\
-		#> --profile:build msvc.jinja <#\
-		#> --settings build_type=Release <#\
+		#> --profile:host vs_msvc.jinja <#\
+		#> --profile:build vs_msvc.jinja <#\
+		#> --settings build_type=Debug <#\
 		#> --build missing <#\
 		#> --install-folder $(BUILD_DIR)/msvc $(TESTS_DIR) <#\
 		#> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
-		#> pwsh -Command "<#\
-		#> conan build --configure <#\
-		#> --build-folder $(BUILD_DIR)/msvc $(TESTS_DIR) <#\
-		#>"
+		#> pwsh -Command " <#\
+		#> `$$toolchain = Join-Path -Path `$$(Resolve-Path .\build\) -ChildPath msvc/conan_toolchain.cmake; <#\
+		#> cmake <#\
+		#> -S $(TESTS_DIR) <#\
+		#> -B $(BUILD_DIR)/msvc <#\
+		#> -DCMAKE_TOOLCHAIN_FILE=\`"`$$toolchain\`" <#\
+	  #> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "<#\
-		#> conan build --build <#\
-		#> --build-folder $(BUILD_DIR)/msvc $(TESTS_DIR) <#\
-		#>"
+		#> cmake <#\
+		#> --build $(BUILD_DIR)/msvc <#\
+		#> --config Debug <#\
+		#> --verbose <#\
+	  #> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command " <#\
-		#> .\$(BUILD_DIR)\msvc\Release\hello_world.exe <#\
+		#> .\$(BUILD_DIR)\msvc\Debug\hello_world.exe <#\
 		#> " | Select-String "Hello world!" -Raw -OutVariable ret; <#\
 		#> if(!$$ret){throw "hello_world failed!"}
 	New-Item -Force -Name "$@" -ItemType File
@@ -122,23 +128,30 @@ $(BUILD_DIR)/llvm/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
 		#> if(!$$ret){throw "LLVM version check failed!"}
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command " <#\
+		#> `$$env:ASAN=\`"OFF\`"; <#\
+		#> `$$env:UBSAN=\`"OFF\`"; <#\
 		#> conan install <#\
-		#> --profile:host llvm.jinja <#\
-		#> --profile:build llvm.jinja <#\
+		#> --profile:host vs_llvm.jinja <#\
+		#> --profile:build vs_llvm.jinja <#\
 		#> --settings build_type=Release <#\
 		#> --build missing <#\
 		#> --install-folder $(BUILD_DIR)/llvm $(TESTS_DIR) <#\
 		#> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command " <#\
-		#> conan build --configure <#\
-		#> --build-folder $(BUILD_DIR)/llvm $(TESTS_DIR) <#\
-		#> "
+		#> `$$toolchain = Join-Path -Path `$$(Resolve-Path .\build\) -ChildPath llvm/conan_toolchain.cmake; <#\
+		#> cmake <#\
+		#> -S $(TESTS_DIR) <#\
+		#> -B $(BUILD_DIR)/llvm <#\
+		#> -DCMAKE_TOOLCHAIN_FILE=\`"`$$toolchain\`" <#\
+	  #> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
-		#> pwsh -Command " <#\
-		#> conan build --build <#\
-		#> --build-folder $(BUILD_DIR)/llvm $(TESTS_DIR) <#\
-		#> "
+		#> pwsh -Command "<#\
+		#> cmake <#\
+		#> --build $(BUILD_DIR)/llvm <#\
+		#> --config Release <#\
+		#> --verbose <#\
+	  #> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command " <#\
 		#> .\$(BUILD_DIR)\llvm\Release\hello_world.exe <#\
