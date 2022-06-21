@@ -10,3 +10,7 @@ conan config init
   yq "with(.compiler.[\`"$_\`"].ub_sanitizer; . = [\`"None\`", True] | . style=\`"flow\`")"  -i $HOME/.conan/settings.yml
 }
 
+$config = Get-Content -Path $HOME/.conan/conan.conf
+$config = $config -replace "print_run_commands = False", "print_run_commands = True"
+Set-Content -Path $HOME/.conan/conan.conf -Value $config
+
