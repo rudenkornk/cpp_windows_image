@@ -52,7 +52,7 @@ ENTRYPOINT ["C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\
 LABEL org.opencontainers.image.authors="Nikita Rudenko"
 LABEL org.opencontainers.image.vendor="Nikita Rudenko"
 LABEL org.opencontainers.image.title="Docker image for C++ CI on Windows"
-LABEL org.opencontainers.image.base.name="mcr.microsoft.com/windows/servercore:ltsc2019"
+LABEL org.opencontainers.image.base.name="mcr.microsoft.com/windows/servercore:ltsc2022"
 
 ARG IMAGE_NAME
 LABEL org.opencontainers.image.ref.name="${IMAGE_NAME}"
