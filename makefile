@@ -99,11 +99,10 @@ $(BUILD_DIR)/msvc/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
 		#> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command " <#\
-		#> `$$toolchain = Join-Path -Path `$$(Resolve-Path .\build\) -ChildPath msvc/conan_toolchain.cmake; <#\
 		#> cmake <#\
 		#> -S $(TESTS_DIR) <#\
 		#> -B $(BUILD_DIR)/msvc <#\
-		#> -DCMAKE_TOOLCHAIN_FILE=\`"`$$toolchain\`" <#\
+		#> -DCMAKE_TOOLCHAIN_FILE=\`"conan_toolchain.cmake\`" <#\
 	  #> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "<#\
@@ -139,11 +138,10 @@ $(BUILD_DIR)/llvm/hello_world: $(DOCKER_CONTAINER) $(HELLO_WORLD_DEPS)
 		#> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command " <#\
-		#> `$$toolchain = Join-Path -Path `$$(Resolve-Path .\build\) -ChildPath llvm/conan_toolchain.cmake; <#\
 		#> cmake <#\
 		#> -S $(TESTS_DIR) <#\
 		#> -B $(BUILD_DIR)/llvm <#\
-		#> -DCMAKE_TOOLCHAIN_FILE=\`"`$$toolchain\`" <#\
+		#> -DCMAKE_TOOLCHAIN_FILE=\`"conan_toolchain.cmake\`" <#\
 	  #> "
 	docker exec $(DOCKER_CONTAINER_NAME) <#\
 		#> pwsh -Command "<#\
