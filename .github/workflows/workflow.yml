@@ -74,7 +74,7 @@ jobs:
           exit 0
         }
     - name: Build
-      run: make $env:IMAGE_NAME
+      run: make image
     - name: Test
       run: make check
     - name: Clean

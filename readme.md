@@ -7,7 +7,7 @@ Docker image for C++ CI on Windows.
 
 ## Build
 ```pwsh
-make rudenkornk/docker_cpp_windows
+make image
 ```
 
 ## Test
@@ -17,7 +17,7 @@ make check
 
 ## Run
 ```pwsh
-make docker_cpp_windows_container
+make container
 
 docker attach docker_cpp_windows_container
 # OR
