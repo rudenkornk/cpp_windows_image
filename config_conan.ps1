@@ -11,6 +11,6 @@ conan config init
 }
 
 $config = Get-Content -Path $HOME/.conan/conan.conf
-$config = $config -replace "print_run_commands = False", "print_run_commands = True"
+$config = $config -replace ".*?print_run_commands = .*", "print_run_commands = True"
 Set-Content -Path $HOME/.conan/conan.conf -Value $config
 
