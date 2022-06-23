@@ -2,8 +2,8 @@ SHELL := pwsh.exe
 .SHELLFLAGS := -Command
 
 PROJECT_NAME := docker_cpp_windows
-VCS_REF := $(shell git rev-parse HEAD)
-BUILD_DATE := $(shell Get-Date -Format "yyyy-MM-dd")
+VCS_REF != git rev-parse HEAD
+BUILD_DATE != Get-Date -Format "yyyy-MM-dd"
 BUILD_DIR ?= build
 TESTS_DIR := tests
 DOCKER_IMAGE_VERSION ?= 0.2.1
@@ -52,10 +52,10 @@ docker_image_tag:
 docker_image_version:
 	$(info $(DOCKER_IMAGE_VERSION))
 
-DOCKERD_UP := $(shell try{Set-Variable -Name ErrorActionPreference -Value stop -Scope Private; if((Get-Command docker) -and (Get-Process dockerd)){return $$true}}Catch{return $$false})
-DOCKER_IMAGE_ID := $(shell if($$$(DOCKERD_UP)){return (docker images --quiet $(DOCKER_IMAGE_TAG))})
-DOCKER_IMAGE_CREATE_STATUS := $(shell if(!"$(DOCKER_IMAGE_ID)"){return "$(DOCKER_IMAGE)_not_created"})
-DOCKER_CACHE_FROM_OPTION := $(shell if("$(DOCKER_CACHE_FROM)"){return "--cache-from $(DOCKER_CACHE_FROM)"})
+DOCKERD_UP != try{Set-Variable -Name ErrorActionPreference -Value stop -Scope Private; if((Get-Command docker) -and (Get-Process dockerd)){return $$true}}Catch{return $$false}
+DOCKER_IMAGE_ID != if($$$(DOCKERD_UP)){return (docker images --quiet $(DOCKER_IMAGE_TAG))}
+DOCKER_IMAGE_CREATE_STATUS != if(!"$(DOCKER_IMAGE_ID)"){return "$(DOCKER_IMAGE)_not_created"}
+DOCKER_CACHE_FROM_OPTION != if("$(DOCKER_CACHE_FROM)"){return "--cache-from $(DOCKER_CACHE_FROM)"}
 .PHONY: $(DOCKER_IMAGE)_not_created
 $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 	docker build <# \
@@ -69,9 +69,9 @@ $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 		#> --tag $(DOCKER_IMAGE_TAG) .
 	New-Item -Force -Name "$@" -ItemType File
 
-DOCKER_CONTAINER_ID := $(shell if($$$(DOCKERD_UP)){return (docker container ls --quiet --all --filter name="^/$(DOCKER_CONTAINER_NAME)$$")})
-DOCKER_CONTAINER_STATE := $(shell if($$$(DOCKERD_UP)){return (docker container ls --format "{{.State}}" --all --filter name="^/$(DOCKER_CONTAINER_NAME)$$")})
-DOCKER_CONTAINER_RUN_STATUS := $(shell if("$(DOCKER_CONTAINER_STATE)" -ne "running"){return "$(DOCKER_CONTAINER)_not_running"})
+DOCKER_CONTAINER_ID != if($$$(DOCKERD_UP)){return (docker container ls --quiet --all --filter name="^/$(DOCKER_CONTAINER_NAME)$$")}
+DOCKER_CONTAINER_STATE != if($$$(DOCKERD_UP)){return (docker container ls --format "{{.State}}" --all --filter name="^/$(DOCKER_CONTAINER_NAME)$$")}
+DOCKER_CONTAINER_RUN_STATUS != if("$(DOCKER_CONTAINER_STATE)" -ne "running"){return "$(DOCKER_CONTAINER)_not_running"}
 .PHONY: $(DOCKER_CONTAINER)_not_running
 $(DOCKER_CONTAINER): $(DOCKER_IMAGE) $(DOCKER_CONTAINER_RUN_STATUS)
 ifneq ($(DOCKER_CONTAINER_ID),)
