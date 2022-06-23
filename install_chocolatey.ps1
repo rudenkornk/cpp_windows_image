@@ -4,5 +4,3 @@ $env:path = "$env:path;C:\ProgramData\chocolatey\bin"
 
 choco feature enable -n allowGlobalConfirmation
 
-choco install git
-

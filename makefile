@@ -25,6 +25,7 @@ DOCKER_DEPS += install_chocolatey.ps1
 DOCKER_DEPS += install_llvm.ps1
 DOCKER_DEPS += install_cmake.ps1
 DOCKER_DEPS += install_python.ps1
+DOCKER_DEPS += install_git.ps1
 DOCKER_DEPS += install_llvm_tools.ps1
 DOCKER_DEPS += install_conan.ps1
 DOCKER_DEPS += $(shell Get-ChildItem -Recurse -File -Name conan | %{"conan\" + $$_} )
