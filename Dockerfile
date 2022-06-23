@@ -22,6 +22,9 @@ RUN ./install_cmake.ps1
 COPY install_python.ps1 ./
 RUN ./install_python.ps1
 
+COPY install_git.ps1 ./
+RUN ./install_git.ps1
+
 COPY install_llvm_tools.ps1 ./
 RUN ./install_llvm_tools.ps1
 
