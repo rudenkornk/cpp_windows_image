@@ -52,11 +52,11 @@ docker_image_version:
 DOCKERD_UP := $(shell try{Set-Variable -Name ErrorActionPreference -Value stop -Scope Private; if((Get-Command docker) -and (Get-Process dockerd)){return $$true}}Catch{return $$false})
 DOCKER_IMAGE_ID := $(shell if($$$(DOCKERD_UP)){return (docker images --quiet $(DOCKER_IMAGE_TAG))})
 DOCKER_IMAGE_CREATE_STATUS := $(shell if(!"$(DOCKER_IMAGE_ID)"){return "$(DOCKER_IMAGE)_not_created"})
-DOCKER_CACHE_FROM_COMMAND := $(shell if("$(DOCKER_CACHE_FROM)"){return "--cache-from $(DOCKER_CACHE_FROM)"})
+DOCKER_CACHE_FROM_OPTION := $(shell if("$(DOCKER_CACHE_FROM)"){return "--cache-from $(DOCKER_CACHE_FROM)"})
 .PHONY: $(DOCKER_IMAGE)_not_created
 $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 	docker build <# \
-		#> $(DOCKER_CACHE_FROM_COMMAND) <#\
+		#> $(DOCKER_CACHE_FROM_OPTION) <#\
 		#> --build-arg IMAGE_NAME="$(DOCKER_IMAGE_NAME)" <#\
 		#> --build-arg VERSION="$(DOCKER_IMAGE_VERSION)" <#\
 		#> --build-arg VCS_REF="$(VCS_REF)" <#\
