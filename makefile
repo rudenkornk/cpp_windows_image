@@ -34,8 +34,11 @@ DOCKER_DEPS += Profile.ps1
 
 HELLO_WORLD_DEPS += $(shell Get-ChildItem -Recurse -File -Name $(TESTS_DIR) | %{"$(TESTS_DIR)\" + $$_} )
 
-.PHONY: $(DOCKER_IMAGE_NAME)
-$(DOCKER_IMAGE_NAME): $(DOCKER_IMAGE)
+.PHONY: image
+image: $(DOCKER_IMAGE)
+
+.PHONY: container
+container: $(DOCKER_CONTAINER)
 
 .PHONY: docker_image_name
 docker_image_name:
@@ -65,9 +68,6 @@ $(DOCKER_IMAGE): $(DOCKER_DEPS) $(DOCKER_IMAGE_CREATE_STATUS)
 		#> --memory $(DOCKER_MEMORY) <#\
 		#> --tag $(DOCKER_IMAGE_TAG) .
 	New-Item -Force -Name "$@" -ItemType File
-
-.PHONY: $(DOCKER_CONTAINER_NAME)
-$(DOCKER_CONTAINER_NAME): $(DOCKER_CONTAINER)
 
 DOCKER_CONTAINER_ID := $(shell if($$$(DOCKERD_UP)){return (docker container ls --quiet --all --filter name="^/$(DOCKER_CONTAINER_NAME)$$")})
 DOCKER_CONTAINER_STATE := $(shell if($$$(DOCKERD_UP)){return (docker container ls --format "{{.State}}" --all --filter name="^/$(DOCKER_CONTAINER_NAME)$$")})
