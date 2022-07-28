@@ -46,7 +46,7 @@ docker run --interactive --tty `
 Instead of `$(Get-Location)` use path to your C++ repo.
 It is recommended to mount it into `C:\repo`.
 
-### 2. Use scripts from this repository to setup your own system:
+### 2. Use scripts from this repository to setup your own system
 These scripts are not designed to run on a local machine.
 It is recommended to just refer to them and install all prerequisites manually.
 For the order of installation see Dockerfile.
