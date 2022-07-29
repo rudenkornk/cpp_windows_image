@@ -3,7 +3,7 @@
 Docker image for C++ CI on Windows.
 
 [![GitHub Actions Status](https://github.com/rudenkornk/docker_cpp_windows/actions/workflows/workflow.yml/badge.svg)](https://github.com/rudenkornk/docker_cpp_windows/actions)
-
+alödksfja
 
 ## Build
 ```pwsh
