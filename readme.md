@@ -21,9 +21,9 @@ make container
 
 docker attach docker_cpp_windows_container
 # OR
-docker exec -it docker_cpp_container pwsh -Command "<command>"
+docker exec -it docker_cpp_windows_container pwsh -Command "<command>"
 # OR with VS environment
-docker exec -it docker_cpp_container cmd /C "vs_exec.bat <pwsh_command>"
+docker exec -it docker_cpp_windows_container cmd /C "vs_exec.bat <pwsh_command>"
 ```
 
 ## Clean
