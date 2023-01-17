@@ -1,10 +1,10 @@
-choco install llvm --version 14.0.0
+choco install llvm --version 15.0.5
 
 Write-Output -InputObject "
 <Project>
   <PropertyGroup>
     <LLVMInstallDir>C:\Program Files\LLVM</LLVMInstallDir>
-    <LLVMToolsVersion>14.0.0</LLVMToolsVersion>
+    <LLVMToolsVersion>15.0.5</LLVMToolsVersion>
   </PropertyGroup>
 </Project>
 " | Out-File "C:\Directory.build.props"

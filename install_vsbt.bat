@@ -5,7 +5,6 @@ curl -SL --output vs_buildtools.exe https://aka.ms/vs/17/release/vs_buildtools.e
 start /w vs_buildtools.exe --quiet --wait --norestart --nocache ^
     --installPath "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools" ^
     --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended ^
-    --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
     --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 ^
     --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 ^
     --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 ^
