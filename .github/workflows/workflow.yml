@@ -1,33 +1,39 @@
 name: Workflow
+
 on:
   workflow_dispatch:
     inputs:
       deploy:
         description: "Should this run deploy image"
         required: false
-        default: 'false'
+        type: boolean
   push:
     branches:
-    - main
+      - main
   pull_request:
     branches:
-    - main
+      - main
+
+defaults:
+  run:
+    shell: pwsh
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  main:
     runs-on: "windows-2022"
     env:
-      registry: docker.io/
+      REGISTRY: ghcr.io
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
         ref: ${{ github.event.pull_request.head.sha }}
     - name: Show machine info
-      run: |
-        Get-Volume
-        docker image ls
-        docker container ls
-        docker container ls --all
+      run: Get-Volume; docker image ls; docker ps; docker ps -a
     - name: Install prerequisites
       run: choco install make
     - name: Set environment
@@ -35,72 +41,56 @@ jobs:
         $COMMIT_MSG=(git log --format=%B -n 1)[0]
         $COMMIT_MSG_HAS_DEPLOY=$COMMIT_MSG.StartsWith("[DEPLOY]")
         $IS_DEPLOY="${{ github.event_name }}".Equals("push") -and $COMMIT_MSG_HAS_DEPLOY
-        $IS_DEPLOY=$IS_DEPLOY -or ("${{ github.event_name }}".Equals("workflow_dispatch") -and "${{ github.event.inputs.deploy }}".Equals("true"))
+        $IS_DEPLOY=$IS_DEPLOY -or "${{ github.event.inputs.deploy }}".Equals("true")
         $WILL_BE_DEPLOYED=$COMMIT_MSG_HAS_DEPLOY -or $IS_DEPLOY
+
         "IS_DEPLOY=$IS_DEPLOY" >> $env:GITHUB_ENV
         "WILL_BE_DEPLOYED=$WILL_BE_DEPLOYED" >> $env:GITHUB_ENV
 
-        $IMAGE_NAME=$(make --silent docker_image_name)
-        $IMAGE_TAG=$(make --silent docker_image_tag)
-        $IMAGE_VERSION=$(make --silent docker_image_version)
-        "IMAGE_NAME=$IMAGE_NAME" >> $env:GITHUB_ENV
+        $IMAGE_NAME=$(make --silent image_name)
+        $IMAGE_TAG=$(make --silent image_tag)
+        $IMAGE_NAMETAG=$(make --silent image_nametag)
+        $REMOTE_IMAGE_NAMETAG="$env:REGISTRY" + "/" + $IMAGE_NAMETAG
+        $REMOTE_IMAGE_LATEST="$env:REGISTRY" + "/" + $IMAGE_NAME + ":latest"
+
+        "CACHE_FROM=$REMOTE_IMAGE_LATEST" >> $env:GITHUB_ENV
+        "ISOLATION=process" >> $env:GITHUB_ENV
         "IMAGE_TAG=$IMAGE_TAG" >> $env:GITHUB_ENV
-        "IMAGE_VERSION=$IMAGE_VERSION" >> $env:GITHUB_ENV
-
-        $REMOTE_IMAGE_NAME="$env:registry" + $IMAGE_NAME
-        $REMOTE_IMAGE_TAG="$env:registry" + $IMAGE_TAG
-        $REMOTE_IMAGE_LATEST=$REMOTE_IMAGE_NAME + ":latest"
-        "REMOTE_IMAGE_NAME=$REMOTE_IMAGE_NAME" >> $env:GITHUB_ENV
-        "REMOTE_IMAGE_TAG=$REMOTE_IMAGE_TAG" >> $env:GITHUB_ENV
+        "IMAGE_NAME=$IMAGE_NAME" >> $env:GITHUB_ENV
+        "IMAGE_NAMETAG=$IMAGE_NAMETAG" >> $env:GITHUB_ENV
+        "REMOTE_IMAGE_NAMETAG=$REMOTE_IMAGE_NAMETAG" >> $env:GITHUB_ENV
         "REMOTE_IMAGE_LATEST=$REMOTE_IMAGE_LATEST" >> $env:GITHUB_ENV
-
-        "DOCKER_ISOLATION=process" >> $env:GITHUB_ENV
-        "DOCKER_CACHE_FROM=$REMOTE_IMAGE_LATEST" >> $env:GITHUB_ENV
-    - name: "Login to image registry"
-      uses: docker/login-action@v1
-      with:
-        #registry: ${{ env.registry }} # uncomment for any registry except docker.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOCKEN }}
-    - name: Download cache
-      # Here we assume that latest release have common layers that should speed up our build
+    - name: "[DEPLOY] Check there is not already such tag in registry"
+      if: env.WILL_BE_DEPLOYED == 'true'
       run: |
-        docker manifest inspect $env:REMOTE_IMAGE_LATEST | Out-Null
-        if($?) {
-          docker pull $env:REMOTE_IMAGE_LATEST
-        }
-        else {
-          Write-Output "Cache was not loaded"
-          exit 0
-        }
+        $TOKEN=$(curl --silent "https://$env:REGISTRY/token?scope=repository:$env:IMAGE_NAME`:pull" | jq --raw-output '.token')
+        $INDEX=$(curl --silent -H "Authorization: Bearer $TOKEN" https://$env:REGISTRY/v2/$env:IMAGE_NAME/tags/list | jq --raw-output ".tags | index(\`"$env:IMAGE_TAG\`")")
+        if($INDEX -ne "null"){ throw "Image tag $env:IMAGE_TAG already exists on $env:REGISTRY!" }
+
+    - name: Download cache from registry
+      # Here we assume that latest release have common layers that should speed up our build
+      continue-on-error: true
+      run: docker pull $env:REMOTE_IMAGE_LATEST
     - name: Build
       run: make image
     - name: Test
       run: make check
-    - name: Clean
-      run: make clean
     - name: Show machine info
-      run: |
-        Get-Volume
-        docker image ls
-        docker container ls
-        docker container ls --all
-    - name: "[DEPLOY] Check there is not already such tag in registry"
-      if: env.WILL_BE_DEPLOYED == 'true'
-      run: |
-        docker manifest inspect $env:REMOTE_IMAGE_TAG | Out-Null
-        if($?) { throw "Found image with same tag in registry!"; }
-        exit 0
+      run: Get-Volume; docker image ls; docker ps; docker ps -a
+
+    - name: "[DEPLOY] Login to image registry"
+      if: env.IS_DEPLOY == 'true'
+      run: docker login --username ${{ github.actor }} --password ${{ github.token }} "$env:REGISTRY"
     - name: "[DEPLOY] Push image to registry"
       if: env.IS_DEPLOY == 'true'
       run: |
-        docker image tag $env:IMAGE_TAG $env:REMOTE_IMAGE_TAG
-        docker image tag $env:IMAGE_TAG $env:REMOTE_IMAGE_LATEST
-        docker image push $env:REMOTE_IMAGE_TAG
+        docker image tag $env:IMAGE_NAMETAG $env:REMOTE_IMAGE_NAMETAG
+        docker image tag $env:IMAGE_NAMETAG $env:REMOTE_IMAGE_LATEST
+        docker image push $env:REMOTE_IMAGE_NAMETAG
         docker image push $env:REMOTE_IMAGE_LATEST
     - name: "[DEPLOY] Tag commit"
       if: env.IS_DEPLOY == 'true'
       uses: tvdias/github-tagger@v0.0.1
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        tag: "v${{ env.IMAGE_VERSION }}"
+        repo-token: ${{ github.token }}
+        tag: "v${{ env.IMAGE_TAG }}"

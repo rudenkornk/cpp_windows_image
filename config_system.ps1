@@ -3,7 +3,7 @@ choco install ninja
 choco install nsis
 choco install vim
 
-git config --global --add safe.directory C:/repo/
+git config --system --add safe.directory '*'
 
 # Support bash -C
 $current_path = [Environment]::GetEnvironmentVariable("PATH", "Machine");
